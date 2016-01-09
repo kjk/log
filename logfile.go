@@ -5,16 +5,17 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 // File describes a log file
 type File struct {
 	sync.Mutex
-	dir     string
-	suffix  string
-	currDay int
-	path    string
-	file    *os.File
+	dir    string
+	suffix string
+	day    int
+	path   string
+	file   *os.File
 }
 
 func (l *File) close() {
@@ -25,6 +26,11 @@ func (l *File) close() {
 }
 
 func (l *File) open() (err error) {
+	t := time.Now()
+	l.day = t.YearDay()
+	fileName := t.Format("2006-02-01") + l.suffix
+	l.path = filepath.Join(l.dir, fileName)
+
 	flag := os.O_CREATE | os.O_APPEND | os.O_WRONLY
 	l.file, err = os.OpenFile(l.path, flag, 0644)
 	if err != nil {
@@ -37,12 +43,21 @@ func (l *File) open() (err error) {
 	return err
 }
 
+// rotate on new day
+func (l *File) reopenIfNeeded() error {
+	t := time.Now()
+	if t.YearDay() == l.day {
+		return nil
+	}
+	l.close()
+	return l.open()
+}
+
 // NewFile opens a new log file (creates if doesn't exist, will append if exists)
 func NewFile(dir, suffix string) (*File, error) {
 	res := &File{
 		dir:    dir,
 		suffix: suffix,
-		path:   filepath.Join(dir, suffix), // TODO: add time
 	}
 	if err := res.open(); err != nil {
 		return nil, err
@@ -67,6 +82,7 @@ func (l *File) Print(s string) {
 	}
 	l.Lock()
 	defer l.Unlock()
+	l.reopenIfNeeded()
 	l.file.Write([]byte(s))
 }
 
