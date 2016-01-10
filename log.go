@@ -143,7 +143,7 @@ func Errorf(format string, arg ...interface{}) {
 
 // Error logs error to error log (if not available, to info log)
 func Error(err error) {
-	s := err.Error()
+	s := err.Error() + "\n"
 	if pc, _, _, ok := runtime.Caller(1); ok {
 		s = functionFromPc(pc) + ": " + s
 	}
