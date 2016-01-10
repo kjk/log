@@ -42,11 +42,14 @@ func IsVerbose() bool {
 	return atomic.LoadInt32(&verbosityLevel) > 0
 }
 
-// StartVerboseForURL will start verbose logging if the url has vl= arg in it.
-// the intended usage is:
-// if StartVerboseLog(r.URL) {
-//      defer DecLogVerbosity()
-// }
+/*
+StartVerboseForURL will start verbose logging if the url has vl= arg in it.
+The intended usage is:
+
+if StartVerboseForURL(r.URL) {
+  defer StopVerboseForURL()
+}
+*/
 func StartVerboseForURL(u *url.URL) bool {
 	// "vl" stands for "verbose logging" and any value other than empty string
 	// truns it on
@@ -57,8 +60,8 @@ func StartVerboseForURL(u *url.URL) bool {
 	return false
 }
 
-// StopVerbose is for name parity with StartVerboseForURL()
-func StopVerbose() {
+// StopVerboseForURL is for name parity with StartVerboseForURL()
+func StopVerboseForURL() {
 	DecVerbosity()
 }
 
