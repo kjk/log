@@ -28,7 +28,7 @@ func (l *File) close() {
 func (l *File) open() (err error) {
 	t := time.Now()
 	l.day = t.YearDay()
-	fileName := t.Format("2006-02-01") + l.suffix
+	fileName := t.Format("2006-01-02") + l.suffix
 	l.path = filepath.Join(l.dir, fileName)
 
 	flag := os.O_CREATE | os.O_APPEND | os.O_WRONLY
