@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	logInfo  *File
-	logError *File
+	logInfo  *DailyRotateFile
+	logError *DailyRotateFile
 
 	dot       = []byte(".")
 	centerDot = []byte("·")
@@ -65,8 +65,8 @@ func StopVerboseForURL() {
 	DecVerbosity()
 }
 
-func open(dir, suffix string, fileOut **File) error {
-	lf, err := NewFile(dir, suffix)
+func open(pathFormat string, fileOut **DailyRotateFile) error {
+	lf, err := NewDailyRotateFile(pathFormat)
 	if err != nil {
 		return err
 	}
@@ -75,13 +75,13 @@ func open(dir, suffix string, fileOut **File) error {
 }
 
 // Open opens a standard log file
-func Open(dir, suffix string) error {
-	return open(dir, suffix, &logInfo)
+func Open(pathFormat string) error {
+	return open(pathFormat, &logInfo)
 }
 
-// OpenError opens a log file for
-func OpenError(dir, suffix string) error {
-	return open(dir, suffix, &logError)
+// OpenError opens a log file for errors
+func OpenError(pathFormat string) error {
+	return open(pathFormat, &logError)
 }
 
 // Close closes all log files
@@ -111,15 +111,15 @@ func functionFromPc(pc uintptr) string {
 	return string(name)
 }
 
-func p(info *File, err *File, s string) {
+func p(info *DailyRotateFile, err *DailyRotateFile, s string) {
 	if LogToStdout {
 		fmt.Print(s)
 	}
 	if err != nil {
-		err.Print(s)
+		err.WriteString(s)
 		return
 	}
-	info.Print(s)
+	info.WriteString(s)
 }
 
 // Fatalf is like log.Fatalf() but also pre-pends name of the caller,
