@@ -20,11 +20,13 @@ type DailyRotateFile struct {
 	file *os.File
 }
 
-func (f *DailyRotateFile) close() {
+func (f *DailyRotateFile) close() error {
+	var err error
 	if f.file != nil {
-		f.file.Close()
+		err = f.file.Close()
 		f.file = nil
 	}
+	return err
 }
 
 func (f *DailyRotateFile) open() error {
@@ -50,7 +52,10 @@ func (f *DailyRotateFile) reopenIfNeeded() error {
 	if t.YearDay() == f.day {
 		return nil
 	}
-	f.close()
+	err := f.close()
+	if err != nil {
+		return err
+	}
 	return f.open()
 }
 
@@ -66,28 +71,32 @@ func NewDailyRotateFile(pathFormat string) (*DailyRotateFile, error) {
 }
 
 // Close closes the file
-func (f *DailyRotateFile) Close() {
+func (f *DailyRotateFile) Close() error {
+	var err error
 	if f != nil {
 		f.Lock()
-		f.close()
+		err = f.close()
 		f.Unlock()
 	}
-}
-
-// Write writes data to a file
-func (f *DailyRotateFile) Write(d []byte) error {
-	if f == nil {
-		return errors.New("File not opened")
-	}
-	f.Lock()
-	f.reopenIfNeeded()
-	_, err := f.file.Write(d)
-	f.Unlock()
 	return err
 }
 
+// Write writes data to a file
+func (f *DailyRotateFile) Write(d []byte) (int, error) {
+	if f == nil {
+		return 0, errors.New("File not opened")
+	}
+	f.Lock()
+	f.Unlock()
+	err := f.reopenIfNeeded()
+	if err != nil {
+		return 0, err
+	}
+	return f.file.Write(d)
+}
+
 // WriteString writes a string to a file
-func (f *DailyRotateFile) WriteString(s string) error {
+func (f *DailyRotateFile) WriteString(s string) (int, error) {
 	return f.Write([]byte(s))
 }
 
