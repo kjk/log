@@ -87,12 +87,19 @@ func (f *DailyRotateFile) Write(d []byte) (int, error) {
 		return 0, errors.New("File not opened")
 	}
 	f.Lock()
-	f.Unlock()
+	defer f.Unlock()
 	err := f.reopenIfNeeded()
 	if err != nil {
 		return 0, err
 	}
 	return f.file.Write(d)
+}
+
+// Flush flushes the file
+func (f *DailyRotateFile) Flush() error {
+	f.Lock()
+	defer f.Unlock()
+	return f.file.Sync()
 }
 
 // WriteString writes a string to a file
